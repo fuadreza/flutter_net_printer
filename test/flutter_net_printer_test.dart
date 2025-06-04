@@ -22,23 +22,23 @@ class MockNetworkManager extends Mock implements NetworkManager {}
 class FakeSocket extends Fake implements Socket {
   bool closed = false;
   List<List<int>> sentData = [];
-  
+
   @override
   Future<void> close() async {
     closed = true;
     return Future.value();
   }
-  
+
   @override
   void add(List<int> data) {
     sentData.add(data);
   }
-  
+
   @override
   Future<void> flush() async {
     return Future.value();
   }
-  
+
   @override
   void destroy() {
     closed = true;
@@ -46,7 +46,8 @@ class FakeSocket extends Fake implements Socket {
 }
 
 void main() {
-  final FlutterNetPrinterPlatform initialPlatform = FlutterNetPrinterPlatform.instance;
+  final FlutterNetPrinterPlatform initialPlatform =
+      FlutterNetPrinterPlatform.instance;
   late FlutterNetPrinter printer;
   // late MockSocket mockSocket;
 
@@ -73,15 +74,15 @@ void main() {
       // Create a fake test server to respond
       final server = await ServerSocket.bind('127.0.0.1', 0);
       final port = server.port;
-      
+
       try {
         // Connect to our test server
         final result = await printer.isDeviceAvailable(
-          '127.0.0.1', 
+          '127.0.0.1',
           port,
           const Duration(seconds: 1),
         );
-        
+
         expect(result, isNotNull);
         expect(result?.address, '127.0.0.1');
         expect(result?.port, port);
@@ -93,52 +94,55 @@ void main() {
     test('should return null when device is not available', () async {
       // Use a port that's unlikely to be in use
       const unusedPort = 54321;
-      
+
       final result = await printer.isDeviceAvailable(
-        '127.0.0.1', 
+        '127.0.0.1',
         unusedPort,
         const Duration(milliseconds: 100),
       );
-      
+
       expect(result, isNull);
     });
   });
 
   group('connectToPrinter', () {
-    test('should connect to printer and return NetworkDevice when successful', () async {
-      // Create a fake test server to respond
-      final server = await ServerSocket.bind('127.0.0.1', 0);
-      final port = server.port;
-      
-      try {
-        // Connect to our test server
-        final result = await printer.connectToPrinter(
-          '127.0.0.1', 
-          port,
-          timeout: const Duration(seconds: 1),
-        );
-        
-        expect(result, isNotNull);
-        expect(result?.address, '127.0.0.1');
-        expect(result?.port, port);
-        
-        // Verify we're connected by calling disconnect
-        await printer.disconnect();
-      } finally {
-        await server.close();
-      }
-    });
+    test(
+      'should connect to printer and return NetworkDevice when successful',
+      () async {
+        // Create a fake test server to respond
+        final server = await ServerSocket.bind('127.0.0.1', 0);
+        final port = server.port;
+
+        try {
+          // Connect to our test server
+          final result = await printer.connectToPrinter(
+            '127.0.0.1',
+            port,
+            timeout: const Duration(seconds: 1),
+          );
+
+          expect(result, isNotNull);
+          expect(result?.address, '127.0.0.1');
+          expect(result?.port, port);
+
+          // Verify we're connected by calling disconnect
+          await printer.disconnect();
+        } finally {
+          await server.close();
+        }
+      },
+    );
 
     test('should return null when connection fails', () async {
       // Use a port that's unlikely to be in use
       const unusedPort = 54321;
-      
+
       final result = await printer.connectToPrinter(
-        '127.0.0.1', 
+        '127.0.0.1',
         unusedPort,
         timeout: const Duration(milliseconds: 100),
       );
-      
+
       expect(result, isNull);
     });
   });
@@ -153,15 +157,15 @@ void main() {
       // Create a fake test server to respond
       final server = await ServerSocket.bind('127.0.0.1', 0);
       final port = server.port;
-      
+
       try {
         // Connect to our test server
         await printer.connectToPrinter(
-          '127.0.0.1', 
+          '127.0.0.1',
           port,
           timeout: const Duration(seconds: 1),
         );
-        
+
         // Disconnect should work without errors
         await printer.disconnect();
       } finally {
@@ -180,7 +184,7 @@ void main() {
       // Create a test server to accept the connection
       final server = await ServerSocket.bind('127.0.0.1', 0);
       final port = server.port;
-      
+
       // Prepare to receive data
       List<int> receivedData = [];
       server.listen((socket) {
@@ -188,21 +192,18 @@ void main() {
           receivedData.addAll(data);
         });
       });
-      
+
       try {
         // Connect to our test server
-        await printer.connectToPrinter(
-          '127.0.0.1', 
-          port,
-        );
-        
+        await printer.connectToPrinter('127.0.0.1', port);
+
         // Send some test data
         final testData = [1, 2, 3, 4];
         await printer.printBytes(data: testData);
-        
+
         // Give some time for data to be received
         await Future.delayed(const Duration(milliseconds: 100));
-        
+
         // Data might not be received in tests due to async nature,
         // but the important part is that the method doesn't throw an error
       } finally {
@@ -217,7 +218,7 @@ void main() {
       // Create a test server to accept the connection
       final server = await ServerSocket.bind('127.0.0.1', 0);
       final port = server.port;
-      
+
       // Prepare to receive data
       List<int> receivedData = [];
       server.listen((socket) {
@@ -225,7 +226,7 @@ void main() {
           receivedData.addAll(data);
         });
       });
-      
+
       try {
         // Send some test data
         final testData = [1, 2, 3, 4];
@@ -235,10 +236,10 @@ void main() {
           testData,
           const Duration(seconds: 1),
         );
-        
+
         // Give some time for data to be received
         await Future.delayed(const Duration(milliseconds: 100));
-        
+
         // Data might not be received in tests due to async nature,
         // but the important part is that the method doesn't throw an error
       } finally {
@@ -249,14 +250,14 @@ void main() {
     test('should throw exception when device is not available', () async {
       // Use a port that's unlikely to be in use
       const unusedPort = 54321;
-      
+
       expect(
-        () => printer.sendData(
-          '127.0.0.1',
-          unusedPort,
-          [1, 2, 3, 4],
-          const Duration(milliseconds: 100),
-        ),
+        () => printer.sendData('127.0.0.1', unusedPort, [
+          1,
+          2,
+          3,
+          4,
+        ], const Duration(milliseconds: 100)),
         throwsException,
       );
     });

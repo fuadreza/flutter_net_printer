@@ -59,7 +59,9 @@ class NetworkManager {
         if (!(e is SocketException)) {
           continue;
         }
-        print('Error connecting to $address:$port- Code: ${e.osError?.errorCode} - $e');
+        print(
+          'Error connecting to $address:$port- Code: ${e.osError?.errorCode} - $e',
+        );
         continue;
       }
     }
@@ -110,7 +112,9 @@ class NetworkManager {
       return socket;
     } catch (e) {
       if (e is SocketException) {
-        throw Exception('Failed to connect to $address:$port - ${e.osError?.message}');
+        throw Exception(
+          'Failed to connect to $address:$port - ${e.osError?.message}',
+        );
       }
       throw Exception('Failed to connect to $address:$port - $e');
     }
@@ -138,7 +142,9 @@ class NetworkManager {
       socket.destroy();
     } catch (e) {
       if (e is SocketException) {
-        throw Exception('Failed to send data to $address:$port - ${e.osError?.message}');
+        throw Exception(
+          'Failed to send data to $address:$port - ${e.osError?.message}',
+        );
       }
       throw Exception('Failed to send data to $address:$port - $e');
     }
