@@ -53,9 +53,9 @@ class _MyAppState extends State<MyApp> {
     _printerSubscription?.cancel();
     _printerSubscription = null;
     // Optionally, you can show a message to the user
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Discovery cancelled')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Discovery cancelled')));
   }
 
   void _isDeviceAvailable(BuildContext context) async {
