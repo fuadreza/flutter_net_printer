@@ -48,6 +48,16 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  void _cancelDiscovery() {
+    // Cancel the current discovery subscription if it exists
+    _printerSubscription?.cancel();
+    _printerSubscription = null;
+    // Optionally, you can show a message to the user
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Discovery cancelled')),
+    );
+  }
+
   void _isDeviceAvailable(BuildContext context) async {
     final address =
         _controllerAddress.text.isNotEmpty ? _controllerAddress.text : '';
@@ -304,6 +314,17 @@ class _MyAppState extends State<MyApp> {
                       _isDeviceAvailable(context);
                     },
                     child: const Text('Check Device Availability'),
+                  );
+                },
+              ),
+              SizedBox(height: 16),
+              Builder(
+                builder: (context) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      _cancelDiscovery();
+                    },
+                    child: const Text('Cancel Discovery'),
                   );
                 },
               ),
