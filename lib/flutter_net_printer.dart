@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_net_printer/model/network_device.dart';
@@ -30,7 +31,26 @@ class FlutterNetPrinter {
     int port = 9100,
     Duration timeout = const Duration(seconds: 1),
   }) {
-    return NetworkManager.discoverPrinters(port: port, timeout: timeout);
+    late StreamController<List<NetworkDevice>> controller;
+    bool isCancelled = false;
+
+    controller = StreamController<List<NetworkDevice>>(
+      onListen: () {
+        NetworkManager.discoverPrinters(
+          controller: controller,
+          port: port,
+          timeout: timeout,
+          shouldCancel: () => isCancelled,
+        );
+      },
+      onCancel: () {
+        print('Stream subscription cancelled');
+        isCancelled = true;
+        controller.close();
+      },
+    );
+
+    return controller.stream;
   }
 
   /// Checks if a network device is available at the given [address] and [port] within the specified

@@ -39,43 +39,83 @@ class _MyAppState extends State<MyApp> {
       // Clear any existing stream
       _printerStream = null;
       // Start discovering printers on the default port (9100)
-      _printerStream = _flutterNetPrinterPlugin.discoverPrinters(port: 9100, timeout: Duration(milliseconds: 200));
+      _printerStream = _flutterNetPrinterPlugin.discoverPrinters(
+        port: 9100,
+        timeout: Duration(milliseconds: 200),
+      );
     } catch (e) {
       // Handle any errors that occur during discovery
     }
   }
 
+  void _cancelDiscovery() {
+    // Cancel the current discovery subscription if it exists
+    _printerSubscription?.cancel();
+    _printerSubscription = null;
+    // Optionally, you can show a message to the user
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Discovery cancelled')));
+  }
+
   void _isDeviceAvailable(BuildContext context) async {
-    final address = _controllerAddress.text.isNotEmpty ? _controllerAddress.text : '';
-    final port = _controllerPort.text.isNotEmpty ? int.tryParse(_controllerPort.text) ?? 9100 : 9100;
+    final address =
+        _controllerAddress.text.isNotEmpty ? _controllerAddress.text : '';
+    final port =
+        _controllerPort.text.isNotEmpty
+            ? int.tryParse(_controllerPort.text) ?? 9100
+            : 9100;
 
     if (address.isEmpty) {
       return;
     }
 
-    final device = await _flutterNetPrinterPlugin.isDeviceAvailable(address, port, Duration(seconds: 10));
+    final device = await _flutterNetPrinterPlugin.isDeviceAvailable(
+      address,
+      port,
+      Duration(seconds: 10),
+    );
     if (device != null) {
       // Device is available, you can proceed with printing
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Device is available: ${device.address}:${device.port}'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Device is available: ${device.address}:${device.port}',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     } else {
       // Device is not available, handle accordingly
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Device is not available: $address:$port'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Device is not available: $address:$port'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
 
   void _connectPrinter() async {
-    final address = _controllerAddress.text.isNotEmpty ? _controllerAddress.text : '';
-    final port = _controllerPort.text.isNotEmpty ? int.tryParse(_controllerPort.text) ?? 9100 : 9100;
+    final address =
+        _controllerAddress.text.isNotEmpty ? _controllerAddress.text : '';
+    final port =
+        _controllerPort.text.isNotEmpty
+            ? int.tryParse(_controllerPort.text) ?? 9100
+            : 9100;
 
     if (address.isEmpty) {
       return;
     }
 
-    connectedPrinter = await _flutterNetPrinterPlugin.connectToPrinter(address, port);
+    connectedPrinter = await _flutterNetPrinterPlugin.connectToPrinter(
+      address,
+      port,
+    );
 
     setState(() {});
   }
@@ -94,8 +134,12 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _printTestFromInputAddress() async {
-    final address = _controllerAddress.text.isNotEmpty ? _controllerAddress.text : '';
-    final port = _controllerPort.text.isNotEmpty ? int.tryParse(_controllerPort.text) ?? 9100 : 9100;
+    final address =
+        _controllerAddress.text.isNotEmpty ? _controllerAddress.text : '';
+    final port =
+        _controllerPort.text.isNotEmpty
+            ? int.tryParse(_controllerPort.text) ?? 9100
+            : 9100;
 
     if (address.isEmpty) {
       return;
@@ -118,16 +162,41 @@ class _MyAppState extends State<MyApp> {
     final generator = Generator(PaperSize.mm80, profile);
     List<int> bytes = [];
 
-    bytes += generator.text('Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
-    bytes += generator.text('Special 1: àÀ èÈ éÉ ûÛ üÜ çÇ ôÔ', styles: const PosStyles(codeTable: 'CP1252'));
-    bytes += generator.text('Special 2: blåbærgrød', styles: const PosStyles(codeTable: 'CP1252'));
+    bytes += generator.text(
+      'Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ',
+    );
+    bytes += generator.text(
+      'Special 1: àÀ èÈ éÉ ûÛ üÜ çÇ ôÔ',
+      styles: const PosStyles(codeTable: 'CP1252'),
+    );
+    bytes += generator.text(
+      'Special 2: blåbærgrød',
+      styles: const PosStyles(codeTable: 'CP1252'),
+    );
 
     bytes += generator.text('Bold text', styles: const PosStyles(bold: true));
-    bytes += generator.text('Reverse text', styles: const PosStyles(reverse: true));
-    bytes += generator.text('Underlined text', styles: const PosStyles(underline: true), linesAfter: 1);
-    bytes += generator.text('Align left', styles: const PosStyles(align: PosAlign.left));
-    bytes += generator.text('Align center', styles: const PosStyles(align: PosAlign.center));
-    bytes += generator.text('Align right', styles: const PosStyles(align: PosAlign.right), linesAfter: 1);
+    bytes += generator.text(
+      'Reverse text',
+      styles: const PosStyles(reverse: true),
+    );
+    bytes += generator.text(
+      'Underlined text',
+      styles: const PosStyles(underline: true),
+      linesAfter: 1,
+    );
+    bytes += generator.text(
+      'Align left',
+      styles: const PosStyles(align: PosAlign.left),
+    );
+    bytes += generator.text(
+      'Align center',
+      styles: const PosStyles(align: PosAlign.center),
+    );
+    bytes += generator.text(
+      'Align right',
+      styles: const PosStyles(align: PosAlign.right),
+      linesAfter: 1,
+    );
     bytes += generator.feed(2);
     bytes += generator.cut();
     return bytes;
@@ -167,7 +236,10 @@ class _MyAppState extends State<MyApp> {
                         itemCount: devices.length,
                         itemBuilder: (context, index) {
                           final device = devices[index];
-                          return ListTile(title: Text(device.name ?? 'Unknown Printer'), subtitle: Text('${device.address}:${device.port}'));
+                          return ListTile(
+                            title: Text(device.name ?? 'Unknown Printer'),
+                            subtitle: Text('${device.address}:${device.port}'),
+                          );
                         },
                       );
                     }
@@ -180,7 +252,10 @@ class _MyAppState extends State<MyApp> {
                   Expanded(
                     child: TextField(
                       controller: _controllerAddress,
-                      decoration: InputDecoration(labelText: 'IP Address', hintText: 'Enter printer IP address'),
+                      decoration: InputDecoration(
+                        labelText: 'IP Address',
+                        hintText: 'Enter printer IP address',
+                      ),
                       onChanged: (value) {
                         // Handle IP address input
                       },
@@ -190,7 +265,10 @@ class _MyAppState extends State<MyApp> {
                   Expanded(
                     child: TextField(
                       controller: _controllerPort,
-                      decoration: InputDecoration(labelText: 'Port', hintText: 'Enter printer port'),
+                      decoration: InputDecoration(
+                        labelText: 'Port',
+                        hintText: 'Enter printer port',
+                      ),
                       onChanged: (value) {
                         // Handle port input
                       },
@@ -199,8 +277,11 @@ class _MyAppState extends State<MyApp> {
                 ],
               ),
               SizedBox(height: 16),
-              if (connectedPrinter != null)...[
-                Text('Connected to: ${connectedPrinter!.address}:${connectedPrinter!.port}', style: TextStyle(color: Colors.green)),
+              if (connectedPrinter != null) ...[
+                Text(
+                  'Connected to: ${connectedPrinter!.address}:${connectedPrinter!.port}',
+                  style: TextStyle(color: Colors.green),
+                ),
                 SizedBox(height: 8),
               ],
               // Connect button
@@ -233,6 +314,17 @@ class _MyAppState extends State<MyApp> {
                       _isDeviceAvailable(context);
                     },
                     child: const Text('Check Device Availability'),
+                  );
+                },
+              ),
+              SizedBox(height: 16),
+              Builder(
+                builder: (context) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      _cancelDiscovery();
+                    },
+                    child: const Text('Cancel Discovery'),
                   );
                 },
               ),
