@@ -9,3 +9,8 @@
 ## 1.0.2
 
 * Enhance stream to use stream controller.
+
+## 1.0.3
+
+* Improve `connectToPrinter` handle existing connection and add error handling.
+* Improve `disconnect` to use timeout and add error handling.

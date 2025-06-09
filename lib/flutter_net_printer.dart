@@ -69,15 +69,34 @@ class FlutterNetPrinter {
 
   /// Attempts to connect to a printer at the specified [address] and [port].
   ///
+  /// Validates the [address] and [port] before attempting to connect.
+  /// If there's an existing connection, it will be closed before establishing a new one.
+  ///
   /// Optionally, a [timeout] can be provided (defaults to 10 seconds).
   ///
   /// Returns a [NetworkDevice] if the connection is successful, or `null` if the connection fails.
-  /// Sets the internal connection state accordingly and destroys the socket on failure.
+  /// Sets the internal connection state accordingly and properly cleans up resources on failure.
   Future<NetworkDevice?> connectToPrinter(
     String address,
     int port, {
     Duration timeout = const Duration(seconds: 10),
   }) async {
+    // Input validation
+    if (address.isEmpty) {
+      print('Invalid address: address cannot be empty');
+      return null;
+    }
+
+    if (port <= 0 || port > 65535) {
+      print('Invalid port: port must be between 1 and 65535');
+      return null;
+    }
+
+    // Close any existing connection first
+    if (_socket != null || _isConnected) {
+      await disconnect();
+    }
+
     try {
       _socket = await NetworkManager.connectToPrinter(
         address: address,
@@ -88,18 +107,43 @@ class FlutterNetPrinter {
       return NetworkDevice(address: address, port: port);
     } catch (e) {
       _isConnected = false;
-      _socket?.destroy();
+      await _socket
+          ?.close()
+          .catchError((_) {
+            _socket?.destroy();
+          })
+          .whenComplete(() {
+            _socket = null;
+          });
       return null;
     }
   }
 
   /// Disconnects from the currently connected printer.
   ///
-  /// Closes the socket connection if it exists, sets the socket to null, and updates the
-  /// connection state to not connected.
+  /// Gracefully closes the socket connection if it exists, sets the socket to null,
+  /// and updates the connection state to not connected. Uses a timeout to ensure
+  /// the method doesn't hang indefinitely.
   Future<void> disconnect() async {
-    if (_socket != null) {
-      await _socket!.close();
+    if (_socket == null) {
+      _isConnected = false;
+      return;
+    }
+
+    try {
+      // First attempt graceful close with timeout
+      await _socket!.close().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          // If graceful close times out, force destroy the socket
+          _socket?.destroy();
+        },
+      );
+    } catch (e) {
+      // If graceful close fails, force destroy the socket
+      _socket?.destroy();
+    } finally {
+      // Always clean up state regardless of how the socket was closed
       _socket = null;
       _isConnected = false;
     }
