@@ -95,11 +95,29 @@ class FlutterNetPrinter {
 
   /// Disconnects from the currently connected printer.
   ///
-  /// Closes the socket connection if it exists, sets the socket to null, and updates the
-  /// connection state to not connected.
+  /// Gracefully closes the socket connection if it exists, sets the socket to null,
+  /// and updates the connection state to not connected. Uses a timeout to ensure
+  /// the method doesn't hang indefinitely.
   Future<void> disconnect() async {
-    if (_socket != null) {
-      await _socket!.close();
+    if (_socket == null) {
+      _isConnected = false;
+      return;
+    }
+
+    try {
+      // First attempt graceful close with timeout
+      await _socket!.close().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          // If graceful close times out, force destroy the socket
+          _socket?.destroy();
+        },
+      );
+    } catch (e) {
+      // If graceful close fails, force destroy the socket
+      _socket?.destroy();
+    } finally {
+      // Always clean up state regardless of how the socket was closed
       _socket = null;
       _isConnected = false;
     }
