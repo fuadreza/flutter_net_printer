@@ -69,15 +69,34 @@ class FlutterNetPrinter {
 
   /// Attempts to connect to a printer at the specified [address] and [port].
   ///
+  /// Validates the [address] and [port] before attempting to connect.
+  /// If there's an existing connection, it will be closed before establishing a new one.
+  ///
   /// Optionally, a [timeout] can be provided (defaults to 10 seconds).
   ///
   /// Returns a [NetworkDevice] if the connection is successful, or `null` if the connection fails.
-  /// Sets the internal connection state accordingly and destroys the socket on failure.
+  /// Sets the internal connection state accordingly and properly cleans up resources on failure.
   Future<NetworkDevice?> connectToPrinter(
     String address,
     int port, {
     Duration timeout = const Duration(seconds: 10),
   }) async {
+    // Input validation
+    if (address.isEmpty) {
+      print('Invalid address: address cannot be empty');
+      return null;
+    }
+
+    if (port <= 0 || port > 65535) {
+      print('Invalid port: port must be between 1 and 65535');
+      return null;
+    }
+
+    // Close any existing connection first
+    if (_socket != null || _isConnected) {
+      await disconnect();
+    }
+
     try {
       _socket = await NetworkManager.connectToPrinter(
         address: address,
@@ -88,7 +107,14 @@ class FlutterNetPrinter {
       return NetworkDevice(address: address, port: port);
     } catch (e) {
       _isConnected = false;
-      _socket?.destroy();
+      await _socket
+          ?.close()
+          .catchError((_) {
+            _socket?.destroy();
+          })
+          .whenComplete(() {
+            _socket = null;
+          });
       return null;
     }
   }
